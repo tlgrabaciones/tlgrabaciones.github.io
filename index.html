@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>El Club VM – Grabaciones</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+      body {
+        min-height: 100vh;
+        background: linear-gradient(180deg, #1f4fa3, #173d7a);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+      }
+
+    .container {
+      background-color: rgba(255, 255, 255, 0.08);
+      padding: 40px;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    }
+
+    .logo img {
+      width: 180px;
+      margin-bottom: 15px;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
+    .description {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #c7dd2d;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #173d7a;
+    }
+
+    button:hover {
+      background-color: #d6ec3c;
+    }
+
+    .note {
+      margin-top: 15px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+      opacity: 0.8;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .footer a {
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+  <div class="logo">
+  <img src="img/LOGO.png" alt="El Club VM">
+  </div>
+
+    <div class="title">EL CLUB · Villa María</div>
+    <div class="subtitle">Grabaciones oficiales de partidos</div>
+
+    <div class="description">
+      Ingresá el código que recibiste para ver el estado de tu grabación
+    </div>
+
+    <input 
+    type="text" 
+    id="codigo"
+    placeholder="Ingresá tu código (ej: 2-0204-1820)">
+
+    <button id="buscarBtn">BUSCAR GRABACIÓN</button>
+
+    <div id="resultado" class="note"></div>
+
+    <div class="note">
+      El enlace se habilita una vez confirmado el pago
+    </div>
+
+  </div>
+
+  <div class="footer">
+    © TL Grabaciones · Grabaciones para clubes deportivos<br>
+    📩 <a href="https://mail.google.com/mail/?view=cm&fs=1&to=tlgrabaciones@gmail.com" target="_blank"> tlgrabaciones@gmail.com</a>
+  </div>
+
+<script>
+  const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwQW-DEj2AktSU9RAz3Q_n-XhSTRiigjYzLP96ucPTQl4vOQknL21AyKfPmkb1ereeGuw/exec";
+
+  document.getElementById("buscarBtn").addEventListener("click", buscarGrabacion);
+
+  function buscarGrabacion() {
+    const codigo = document.getElementById("codigo").value.trim();
+    const resultado = document.getElementById("resultado");
+
+    resultado.innerHTML = "Buscando grabación...";
+
+    if (codigo === "") {
+      resultado.innerHTML = "⚠️ Ingresá un código válido";
+      return;
+    }
+
+    fetch(`${URL_APPS_SCRIPT}?codigo=${encodeURIComponent(codigo)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.resultado === "pendiente") {
+          resultado.innerHTML = "⏳ Tu grabación aún no está lista";
+        } 
+        else if (data.resultado === "ok") {
+          const fileId = data.link.match(/\/d\/([^/]+)/)[1];
+
+          const verLink = data.link;
+          const descargarLink = `https://drive.google.com/uc?export=download&id=${fileId}`;
+
+          resultado.innerHTML = `
+            ✅ Tu grabación está lista<br><br>
+
+            <a href="${verLink}" target="_blank">
+              ▶️ Ver video
+            </a><br><br>
+
+            <a href="${descargarLink}">
+              ⬇️ Descargar video
+            </a>
+          `;
+        }
+        else if (data.resultado === "no_pagado") {
+          resultado.innerHTML = "ℹ️ La grabación no fue adquirida para este turno";
+        }
+        else {
+          resultado.innerHTML = "❌ Código inválido";
+        }
+      })
+      .catch(() => {
+        resultado.innerHTML = "❌ Error de conexión. Intentá más tarde.";
+      });
+  }
+</script>
+
+
+</body>
+</html>
